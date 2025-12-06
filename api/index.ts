@@ -1,7 +1,27 @@
 import express, { Request, Response } from 'express';
 import cors from 'cors';
 import dotenv from 'dotenv';
-import { supabaseAdmin } from './supabaseClient';
+import { createClient } from '@supabase/supabase-js';
+
+// Supabase Configuration (Embedded to fix Vercel Module Resolution)
+const supabaseUrl = process.env.SUPABASE_URL || '';
+const supabaseServiceKey = process.env.SUPABASE_SERVICE_ROLE_KEY || '';
+
+if (!supabaseUrl || !supabaseServiceKey) {
+    console.warn('Missing Supabase environment variables! Queries will fail.');
+}
+
+// Server-side Supabase client with service role key
+const supabaseAdmin = createClient(supabaseUrl, supabaseServiceKey, {
+    auth: {
+        autoRefreshToken: false,
+        persistSession: false
+    }
+});
+
+const supabaseAnonKey = process.env.SUPABASE_ANON_KEY || '';
+const supabase = createClient(supabaseUrl, supabaseAnonKey);
+
 import { authenticateToken, AuthRequest } from './middleware/auth';
 import { sendContactNotification } from './utils/email';
 import { generateContent } from './utils/ai';
